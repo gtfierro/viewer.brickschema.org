@@ -64,6 +64,19 @@ impl VisualizerWrapper {
         self.visualizer.add_ontology(content_str.as_bytes(), format).unwrap();
     }
 
+    // d2lang function
+    #[wasm_bindgen(js_name = create_d2_file)]
+    pub fn create_d2_file(&mut self, content: JsString, format: JsString) -> String {
+        let format_str = GraphFormat::Turtle;
+        let content_str: String = content.into();
+
+        // Call your visualizer function with the converted arguments
+        self.visualizer
+            .create_graph(content_str.as_bytes(), format_str)
+            .unwrap();
+        self.visualizer.graph_to_d2lang().unwrap()
+    }
+
     #[wasm_bindgen(js_name = createDotFile)]
     pub fn create_dot_file(&mut self, content: JsString, format: JsString) -> String {
         let format_str = GraphFormat::Turtle;
@@ -187,7 +200,7 @@ impl Visualizer {
                 }
             }
         }
-        Ok("#ffffff".to_owned())
+        Ok("#000000".to_owned())
     }
 
     pub fn create_graph(
