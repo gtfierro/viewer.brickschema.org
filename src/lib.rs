@@ -1,6 +1,6 @@
 mod utils;
 
-use js_sys::{JsString, Uint8Array};
+use js_sys::{JsString, Reflect};
 use wasm_bindgen::prelude::*;
 
 use anyhow::{anyhow, Result};
@@ -87,6 +87,40 @@ impl VisualizerWrapper {
             .create_graph(content_str.as_bytes(), format_str)
             .unwrap()
     }
+
+    #[wasm_bindgen(js_name = addFilter)]
+    pub fn add_filter(&mut self, filter: js_sys::Function) -> () {
+        let filter_fn: FilterFn = Box::new(move |from: &str, to: &str, edge: &str| -> bool {
+            let from = JsString::from(from);
+            let to = JsString::from(to);
+            let edge = JsString::from(edge);
+            let result = filter.call3(&JsValue::NULL, &from, &to, &edge).unwrap();
+            if let Some(result) = result.as_bool() {
+                result
+            } else {
+                false
+            }
+        });
+        self.visualizer.add_filter(filter_fn);
+    }
+
+    #[wasm_bindgen(js_name = addClassColorMap)]
+    pub fn add_class_color_map(&mut self, class_color_map: &js_sys::Map) -> () {
+        let mut color_map: HashMap<String, String> = HashMap::new();
+
+        let keys = Reflect::own_keys(class_color_map).unwrap();
+        for key in keys.iter() {
+            let jskey: JsValue = key.as_string().unwrap().into();
+            let value: String = Reflect::get(class_color_map, &jskey).unwrap().as_string().unwrap().into();
+            //alert(format!("key: {:?}, value: {}", jskey, value).as_str());
+            let key = key.as_string().unwrap();
+            color_map.insert(key, value);
+        }
+
+        self.visualizer.add_class_color_map(color_map);
+    }
+
+
 }
 
 static PREFIXES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
@@ -94,13 +128,17 @@ static PREFIXES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     map.insert("brick", "https://brickschema.org/schema/Brick#");
     map.insert("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
     map.insert("owl", "http://www.w3.org/2002/07/owl#");
+    map.insert("sh", "http://www.w3.org/ns/shacl#");
+    map.insert("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+    map.insert("skos", "http://www.w3.org/2004/02/skos/core#");
+    map.insert("xsd", "http://www.w3.org/2001/XMLSchema#");
     map
 });
 
 fn rewrite_term(node: &Term) -> String {
     let mut s = node.to_string();
     for (prefix, namespace) in PREFIXES.iter() {
-        s = s.replace(namespace, format!("{}_", prefix).as_str());
+        s = s.replace(namespace, format!("{}:", prefix).as_str());
     }
     let matches: &[_] = &['<', '>', '"'];
     s.trim_matches(matches).to_owned()
@@ -113,7 +151,9 @@ fn graph_to_dot(graph: &petgraph::Graph<&str, &str>, filename: &str) -> Result<(
 }
 
 type ColorFn = fn(node: &str) -> String;
-pub type FilterFn = fn(from: &str, to: &str, edge: &str) -> bool;
+//pub type FilterFn = fn(from: &str, to: &str, edge: &str) -> bool;
+// filterfn as a dyn type
+pub type FilterFn = Box<dyn Fn(&str, &str, &str) -> bool>;
 
 // if the build target is WASM, then the store inside should be the oxigraph JSStore
 // if the build target is native, then the store inside should be the oxigraph Store
@@ -200,7 +240,7 @@ impl Visualizer {
                 }
             }
         }
-        Ok("#000000".to_owned())
+        Ok("#ffffff".to_owned())
     }
 
     pub fn create_graph(
@@ -214,12 +254,13 @@ impl Visualizer {
 
         let q = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                  PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  SELECT ?from ?p ?to WHERE {
                      ?x rdf:type ?from .
                      ?x ?p ?y .
                      ?y rdf:type ?to .
-                     ?from a owl:Class .
-                     ?to a owl:Class .
+                     { ?to rdf:type+ owl:Class } UNION { ?to rdf:type+ rdfs:Class }
+                     { ?from rdf:type+ owl:Class } UNION { ?from rdf:type+ rdfs:Class }
                  }";
 
         if let QueryResults::Solutions(solutions) = self.store.query(q)? {
@@ -232,7 +273,7 @@ impl Visualizer {
                     let to = row.get("to").unwrap().to_string();
                     let p = row.get("p").unwrap().to_string();
 
-                    if let Some(filter) = self.filter {
+                    if let Some(filter) = &self.filter {
                         if !(filter)(from.as_str(), to.as_str(), p.as_str()) {
                             continue;
                         }
@@ -292,8 +333,18 @@ impl Visualizer {
 
         let mut w = Vec::new();
         write!(w, "{:?}", Dot::with_config(&self.g, &[]))?;
-        Ok(String::from_utf8(w)?)
-        //graph_to_dot(&self.g, "output.dot")?;
-        //self.graph_to_d2lang()
+        let mut dot = String::from_utf8(w)?;
+
+        // clean up weird quotes that show up in serialization from petgraph
+        dot = dot.replace("\\\"","");
+        // alters the dot file to add colors
+        for (node, color) in self.colors.iter() {
+            dot = dot.replace(
+                format!("\"{}\"", node).as_str(),
+                format!("\"{}\", fillcolor=\"{}\"", node, color).as_str(),
+            );
+        } 
+
+        Ok(dot)
     }
 }
