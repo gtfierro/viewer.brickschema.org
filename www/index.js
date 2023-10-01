@@ -5,6 +5,37 @@ async function run() {
 
     var network = null;
 
+    // Initialize Ace Editor for nodeFilter
+    var nodeFilterEditor = ace.edit("nodeFilter");
+    nodeFilterEditor.setTheme("ace/theme/github");
+    nodeFilterEditor.getSession().setMode("ace/mode/javascript");
+    nodeFilterEditor.setOptions({
+      fontSize: "8pt",
+      wrap: true,
+      fontFamily: "monospace"
+    });
+    nodeFilterEditor.setValue(`// use 'from', 'to', and 'edge' variables to return
+// true if the nodes and edge should be included in the 
+// visualization.
+// Example #1: only show 'isPointOf/hasPoint' edges
+// return edge.toLowerCase().includes('point');
+return from != to;`, 1);
+
+    // Initialize Ace Editor for colorMap
+    var colorMapEditor = ace.edit("colorMap");
+    colorMapEditor.setTheme("ace/theme/github");
+    colorMapEditor.getSession().setMode("ace/mode/javascript");
+    colorMapEditor.setOptions({
+      fontSize: "8pt",
+      wrap: true,
+      fontFamily: "monospace"
+    });
+    colorMapEditor.setValue(`{
+    "https://brickschema.org/schema/Brick#Location": "LightCoral",
+    "https://brickschema.org/schema/Brick#Point": "Gold",
+    "https://brickschema.org/schema/Brick#Equipment": "#32BF84"
+}`, 1); // Default content here
+
     // accepts a list of urls as arguments. Fetches each url
     // and extracts the file extension from the requst url.
     // Returns a list of objects with {'content': <content of the
@@ -73,13 +104,14 @@ async function run() {
     // Event listener for the submit button
     document.getElementById('submit').addEventListener('click', async () => {
 
+        if (network) network.destroy();
+
         // input custom filter function
-        const customFilterInput = document.getElementById('nodeFilter');
-        const customFilter = customFilterInput.value;
+        const customFilter = nodeFilterEditor.getSession().getValue();
         if (customFilter.length > 0) rdfvis.addFilter(new Function('from','to','edge', customFilter));
 
         // add the colors to the visualizer
-        let color_map = document.getElementById('colorMap').value;
+        let color_map = colorMapEditor.getSession().getValue();
         if (color_map.length > 0) {
             color_map = JSON.parse(color_map);
             console.log(color_map);
@@ -98,25 +130,6 @@ async function run() {
             }
         }
 
-        // handle ontology files
-        const ontologyFileInput = document.getElementById('ontologyFile');
-        for (let file of ontologyFileInput.files) {
-            console.log("Loading file " + file.name);
-            const content = await file.text();
-            rdfvis.addOntology(content, file.name.split('.').pop());
-        }
-        const ontologyUrlInput = document.getElementById('ontologyUrl');
-        // parse the URLs out of the textfield, removing all empty lines
-        const ontologyUrls = ontologyUrlInput.value.trim().split('\n').filter(url => url.length > 0);
-        const ontologyUrlPromises = ontologyUrls.map(url => {
-            console.log("Loading URL " + url);
-            fetch(url).then(response => response.text())
-        });
-        const ontologyUrlContents = await Promise.all(ontologyUrlPromises);
-        for (let content of ontologyUrlContents) {
-            rdfvis.addOntology(content, 'ttl');
-        }
-        
         let dotString = '';
 
         // Handle file uploads

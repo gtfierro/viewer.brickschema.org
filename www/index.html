@@ -5,6 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link type="text/css" rel="stylesheet" href="./site.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.28.0/ace.js" integrity="sha512-ZxGMf7jYJjId6DxujolfBm1Fgk3eNuujx2bg1oFB6jlXhj33BR47Pnh4wLRhvdCpwoWCKP23sdLQPrIBlTEFKA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.28.0/theme-github.min.js" integrity="sha512-6PQOyKN8ulKmC/NQlWnhk2Upjza1Lj9pbYD/6+gNuNG+U28jW/x9iJQJuiQkfQAFggY1sToW9va3vY4xfpsJaA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -14,31 +16,18 @@
             <h1>Graph Visualization</h1>
         </div>
         <div>
-        <label for="nodeFilter">Node Filter Function</label>
-        <textarea id="nodeFilter" rows="6" cols="50">
-// use 'from', 'to', and 'edge' variables to return
-// true if the nodes and edge should be included in the visualization
-// Example #1: only show 'isPointOf/hasPoint' edges
-// return edge.toLowerCase().includes('point');
-return true;
-            </textarea>
+            <label for="nodeFilter">Node Filter Function</label>
+            <div id="nodeFilter" style="height: 100px; width: 500px;"></div>
         </div>
 
         <div>
             <label for="colorMap">Color Map</label>
-            <textarea id="colorMap" rows="6" cols="50">
-{
-    "https://brickschema.org/schema/Brick#Location": "LightCoral",
-    "https://brickschema.org/schema/Brick#Point": "Gold",
-    "https://brickschema.org/schema/Brick#Equipment": "#32BF84"
-}
-            </textarea>
+            <div id="colorMap" style="height: 100px; width: 500px;"></div>
         </div>
 
-        <p>Common ontology files to include for visualization</p>
-        <!-- column of checkboxes for brick, qudt and RealEstateCore ontologies -->
 
         <div class="checkbox">
+            <p>Common ontology files to include for visualization</p>
             <input type="checkbox" class='ontologycheckbox' id="brick" name="brick" value="https://raw.githubusercontent.com/open223/explore.open223.info/main/ontologies/Brick.ttl" checked>
             <label for="brick">Brick</label>
             <!--<input type="checkbox" class='ontologycheckbox' id="qudt" name="qudt" value="qudt">
@@ -47,16 +36,6 @@ return true;
             <label for="realestate">RealEstateCore</label>
         </div>
 
-        <div class="file-input">
-            <label for="ontologyFile">Upload Ontology Files (.ttl):</label>
-            <input type="file" id="ontologyFile" accept=".ttl" multiple />
-        </div>
-        <div class="file-input">
-            <label for="ontologyUrl">Enter Ontology URLs (one per line):</label>
-            <textarea id="ontologyUrl" rows="2" cols="50"></textarea>
-        </div>
-
-        <p>Data files are merged together and visualized</p>
         <div class="file-input">
             <label for="dataFile">Upload Data File to Visualize(.ttl):</label>
             <input type="file" id="dataFile" accept=".ttl" />
