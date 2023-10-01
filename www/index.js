@@ -20,12 +20,12 @@ async function run() {
     }
 
     let rdfvis = wasm.Visualizer.new();
-    let brick_resp = get_urls(['https://raw.githubusercontent.com/open223/explore.open223.info/main/ontologies/Brick.ttl'])[0];
-    brick_resp.content.then(content => {
-        rdfvis.addOntology(content, brick_resp.extension);
-    })
-    .catch(err => console.log(err));
-    console.log(rdfvis);
+    //let brick_resp = get_urls(['https://raw.githubusercontent.com/open223/explore.open223.info/main/ontologies/Brick.ttl'])[0];
+    //brick_resp.content.then(content => {
+    //    rdfvis.addOntology(content, brick_resp.extension);
+    //})
+    //.catch(err => console.log(err));
+    //console.log(rdfvis);
 
 
 
@@ -84,6 +84,18 @@ async function run() {
             color_map = JSON.parse(color_map);
             console.log(color_map);
             rdfvis.addClassColorMap(color_map);
+        }
+
+        // handle all the checkboxes in index.html. if the checkbox has a class of 'ontologycheckbox'
+        // and it is checked, then load in the ontology from the checkbox
+        const ontologyCheckboxes = document.getElementsByClassName('ontologycheckbox');
+        for (let checkbox of ontologyCheckboxes) {
+            if (checkbox.checked) {
+                const ontologyUrl = checkbox.value;
+                console.log("Loading URL " + ontologyUrl);
+                const content = await fetch(ontologyUrl).then(response => response.text());
+                rdfvis.addOntology(content, ontologyUrl.split('.').pop());
+            }
         }
 
         // handle ontology files

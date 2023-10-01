@@ -1,0 +1,80 @@
+body {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+}
+
+#output {
+    flex: 1;
+    height: 800px;
+}
+
+#menu {
+    max-width: 400px;
+    flex: 1;
+    background-color: #f0f0f0;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: left;
+}
+
+#d2text {
+    width: 100%;
+    flex: 1;
+    height: 100%;
+    font-family: monospace;
+    resize: vertical; /* Allow vertical resizing of the textarea */
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row; /* Change to row layout */
+    flex-wrap: wrap; /* Allow wrapping to handle smaller screens */
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.file-input {
+    gap: 10px;
+}
+
+.file-input label,
+label[for="ontologyUrl"],
+label[for="dataUrl"] {
+    font-weight: bold;
+}
+
+.file-input input[type="file"],
+textarea {
+    flex: 1;
+    width: 100%;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    flex: 1;
+    gap: 10px;
+    margin: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#graphContainer {
+    height: 100%;
+}
