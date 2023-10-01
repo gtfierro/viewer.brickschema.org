@@ -155,6 +155,8 @@ return from != to;`, 1);
         document.getElementById('d2text').style.display = 'none';
         // show graphContainer
         document.getElementById('graphContainer').style.display = 'block';
+        document.getElementById('download').disabled = false;
+        document.getElementById('generated2').disabled = false;
 
         // Render the graph
         renderGraph(dotString);
@@ -187,6 +189,7 @@ return from != to;`, 1);
 
     // disable the 'download' button until the graphContainer div contains something
     document.getElementById('download').disabled = true;
+    document.getElementById('generated2').disabled = true;
 
     // Function to generate D2 string and display it in the 'd2text' div
     // Event listener for the 'generated2' button

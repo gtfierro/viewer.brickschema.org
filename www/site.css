@@ -24,7 +24,7 @@ body {
 #d2text {
     width: 100%;
     flex: 1;
-    height: 100%;
+    height: 800px;
     font-family: monospace;
     resize: vertical; /* Allow vertical resizing of the textarea */
 }
@@ -73,6 +73,13 @@ button {
 
 button:hover {
     background-color: #0056b3;
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
 }
 
 #graphContainer {
