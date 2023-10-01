@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graph Visualization</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #d2text {
+            width: 100%;
+            height: 300px; /* Set an appropriate height for the textarea */
+            font-family: monospace;
+            resize: vertical; /* Allow vertical resizing of the textarea */
+        }
+
+        .flex-container {
+            display: flex;
+            flex-direction: row; /* Change to row layout */
+            flex-wrap: wrap; /* Allow wrapping to handle smaller screens */
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #graphForm {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            width: 100%;
+            max-width: 1200px;
+            gap: 10px;
+        }
+
+        .left-column,
+        .right-column {
+            flex: 1;
+            padding: 10px 10px; /* Add padding to separate columns */
+        }
+
+        .file-input {
+            gap: 10px;
+        }
+
+        .file-input label,
+        label[for="ontologyUrl"],
+        label[for="dataUrl"] {
+            font-weight: bold;
+        }
+
+        .file-input input[type="file"],
+        textarea {
+            flex: 1;
+            width: 100%;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            flex: 1;
+            gap: 10px;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #graphContainer {
+            height: 1000px;
+            width: 100%;
+            padding: 10px;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="topbox" class="flex-container">
+        <div id="graphForm">
+            <p>Upload files. Ontology files are loaded but not visualized. All uploaded data file are merged together</p>
+            <div class="flex-container">
+                <div class="left-column">
+                    <details>
+                        <summary>Node Filter Function</summary>
+                        <textarea id="nodeFilter" rows="4" cols="50">
+// use 'from', 'to', and 'edge' variables to return
+// true if the nodes and edge should be included in the visualization
+return edge.toLowerCase().includes('point');
+                        </textarea>
+                    </details>
+                    <div class="file-input">
+                        <label for="ontologyFile">Upload Ontology Files (.ttl):</label>
+                        <input type="file" id="ontologyFile" accept=".ttl" multiple />
+                    </div>
+                    <div class="file-input">
+                        <label for="ontologyUrl">Enter Ontology URLs (one per line):</label>
+                        <textarea id="ontologyUrl" rows="2" cols="50"></textarea>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <details>
+                        <summary>Color Map</summary>
+                        <textarea id="colorMap" rows="6" cols="50">
+{
+    "https://brickschema.org/schema/Brick#Location": "LightCoral",
+    "https://brickschema.org/schema/Brick#Point": "Gold",
+    "https://brickschema.org/schema/Brick#Equipment": "#32BF84"
+}
+                        </textarea>
+                    </details>
+                    <div class="file-input">
+                        <label for="dataFile">Upload Data File to Visualize(.ttl):</label>
+                        <input type="file" id="dataFile" accept=".ttl" />
+                    </div>
+                    <div class="file-input">
+                        <label for="dataUrl">Enter Data URLs to Visualize (one per line):</label>
+                        <textarea id="dataUrl" rows="2" cols="50"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-container">
+                    <button type="button" id="submit">Generate Interactive Visualization</button>
+                    <button type="button" id="download" onclick="document.getElementById('canvasImg').click();">Download Visualization</button>
+                    <button type="button" id="generated2">Generate D2 String</button>
+                    <a id="canvasImg" download="filename"></a>
+                <br>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-container">
+    <!-- hide graphcontainer and d2 text by default -->
+    <div id="graphContainer" style="display:none"></div>
+    <textarea id="d2text" style="display:none" readonly></textarea> <!-- Add a textarea for copy-pasting -->
+        </div>
+    </div>
+
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+    ></script>
+    <script type="module" src="./bootstrap.js"></script>
+</body>
+</html>
+
