@@ -224,7 +224,7 @@ impl Visualizer {
 
         // write colors
         for (node, color) in self.colors.iter() {
-            writeln!(w, "{}.style.fill: \"{}\"", node, color)?;
+            writeln!(w, "\"{}\".style.fill: \"{}\"", node, color)?;
         }
 
         Ok(String::from_utf8(w)?)
