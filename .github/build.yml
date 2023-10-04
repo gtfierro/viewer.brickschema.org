@@ -1,0 +1,71 @@
+# autotranslated from a .travis.yml file
+name: Rust Build and Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust_version: [beta, nightly]
+
+    env:
+      RUST_BACKTRACE: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust_version }}
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install wasm-pack
+        run: |
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
+        if: matrix.rust_version == 'beta'
+
+      - name: Install cargo-update and cargo-generate
+        run: |
+          cargo install cargo-update
+          cargo install --vers "^0.2" cargo-generate
+        if: matrix.rust_version == 'beta' || matrix.rust_version == 'nightly'
+
+      - name: Install wasm32-unknown-unknown target
+        run: |
+          rustup target add wasm32-unknown-unknown
+        if: matrix.rust_version == 'beta' || matrix.rust_version == 'nightly'
+
+      - name: Generate Cargo.toml and cd into testing
+        run: |
+          cargo generate --git . --name testing
+          mv Cargo.toml Cargo.toml.tmpl
+          cd testing
+        if: matrix.rust_version == 'beta' || matrix.rust_version == 'nightly'
+
+      - name: Build and test
+        run: |
+          cargo check
+          cargo check --target wasm32-unknown-unknown
+          cargo check --no-default-features
+          cargo check --target wasm32-unknown-unknown --no-default-features
+          cargo check --no-default-features --features console_error_panic_hook
+          cargo check --target wasm32-unknown-unknown --no-default-features --features console_error_panic_hook
+          # Note: no enabling the `wee_alloc` feature here because it requires nightly for now.
+        if: matrix.rust_version == 'beta' || matrix.rust_version == 'nightly'
