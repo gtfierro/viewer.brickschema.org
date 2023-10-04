@@ -51,21 +51,6 @@ return from != to;`, 1);
     }
 
     let rdfvis = wasm.Visualizer.new();
-    //let brick_resp = get_urls(['https://raw.githubusercontent.com/open223/explore.open223.info/main/ontologies/Brick.ttl'])[0];
-    //brick_resp.content.then(content => {
-    //    rdfvis.addOntology(content, brick_resp.extension);
-    //})
-    //.catch(err => console.log(err));
-    //console.log(rdfvis);
-
-
-
-    //let resp = get_urls(['https://raw.githubusercontent.com/BrickSchema/Brick/master/examples/air_quality_sensors/air_quality_sensor_example.ttl'])[0];
-    //resp.content.then(content => {
-    //    console.log(content);
-    //    console.log(vis.createDotFile(content, resp.extension));
-    //})
-    //.catch(err => console.log(err));
 
     // Function to render the graph using viz.js
     function renderGraph(dotString) {
@@ -104,11 +89,15 @@ return from != to;`, 1);
     // Event listener for the submit button
     document.getElementById('submit').addEventListener('click', async () => {
 
+        // remove the existing graph
         if (network) network.destroy();
 
         // input custom filter function
         const customFilter = nodeFilterEditor.getSession().getValue();
-        if (customFilter.length > 0) rdfvis.addFilter(new Function('from','to','edge', customFilter));
+        if (customFilter.length > 0) {
+            console.log("Updating filter function: " + customFilter);
+            rdfvis.addFilter(new Function('from','to','edge', customFilter));
+        }
 
         // add the colors to the visualizer
         let color_map = colorMapEditor.getSession().getValue();

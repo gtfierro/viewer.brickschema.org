@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 use once_cell::sync::Lazy;
 use oxigraph::io::GraphFormat;
 use oxigraph::model::*;
-use oxigraph::sparql::QueryResults;
+use oxigraph::sparql::{Query, QueryResults};
 use oxigraph::store::Store;
 use petgraph::dot::Dot;
 use petgraph::graph::NodeIndex;
@@ -181,6 +181,13 @@ impl Visualizer {
         })
     }
 
+    fn reset(&mut self) {
+        self.labels.clear();
+        self.g.clear();
+        self.nodes.clear();
+        self.colors.clear();
+    }
+
     // add FilterFn to Visualizer
     pub fn add_filter(&mut self, filter: FilterFn) {
         self.filter = Some(filter);
@@ -205,9 +212,10 @@ impl Visualizer {
             let source = edge.source();
             let target = edge.target();
             let label = edge.weight();
+
             writeln!(
                 w,
-                "{} -> {}: {}",
+                "\"{}\" -> \"{}\": \"{}\"",
                 self.g.node_weight(source).unwrap(),
                 self.g.node_weight(target).unwrap(),
                 label
@@ -248,9 +256,16 @@ impl Visualizer {
         data_graph: impl BufRead,
         format: GraphFormat,
     ) -> Result<String> {
-        // load into a graph
+        // reset the internal state
+        self.reset();
+
+        // load data_graph into self.store under a temporary graphname that is
+        // not the DefaultGraph
+        let temp_namednode = NamedNode::new("urn:__temp__")?;
+        let temp_graphname = GraphNameRef::NamedNode(temp_namednode.as_ref());
         self.store
-            .load_graph(data_graph, format, GraphNameRef::DefaultGraph, None)?;
+            .load_graph(data_graph, format, temp_graphname, None)?;
+
 
         let q = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                  PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -263,7 +278,10 @@ impl Visualizer {
                      { ?from rdf:type+ owl:Class } UNION { ?from rdf:type+ rdfs:Class }
                  }";
 
-        if let QueryResults::Solutions(solutions) = self.store.query(q)? {
+        let mut query = Query::parse(q, None)?;
+        query.dataset_mut().set_default_graph_as_union();
+
+        if let QueryResults::Solutions(solutions) = self.store.query(query)? {
             let mut edges: Vec<(usize, usize, usize)> = Vec::new();
             for row in solutions {
                 let row = row?;
